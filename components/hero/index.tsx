@@ -92,8 +92,8 @@ export function HeroSection() {
           delay={0.5}
         />
         <AnimatedHeading
-          text="STUDIO"
-          className="text-[clamp(4rem,12vw,14rem)] font-bold tracking-[-0.04em] text-white/80 leading-[0.85]"
+          text="PHOTO STUDIO"
+          className="text-[clamp(2.5rem,8vw,10rem)] font-bold tracking-[-0.04em] text-white/80 leading-[0.85]"
           delay={0.7}
         />
 

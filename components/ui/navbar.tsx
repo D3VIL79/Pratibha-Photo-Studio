@@ -27,7 +27,7 @@ export function Navbar() {
         }}
       >
         <a href="#" className="text-xl font-heading font-bold text-white tracking-tighter">
-          PRATIBHA PHOTO<span className="text-[#00FF9C]">.</span>
+          PRATIBHA PHOTO STUDIO<span className="text-[#00FF9C]">.</span>
         </a>
 
         <div className="hidden md:flex items-center gap-10">

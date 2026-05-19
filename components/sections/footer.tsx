@@ -24,7 +24,7 @@ export function Footer() {
             transition={{ duration: 1 }}
           >
             <span className="text-3xl font-heading font-bold text-white tracking-tighter block mb-4">
-              PRATIBHA PHOTO<span className="text-[#00FF9C]">.</span>
+              PRATIBHA PHOTO STUDIO<span className="text-[#00FF9C]">.</span>
             </span>
             <p className="text-white/25 text-sm leading-relaxed max-w-xs">
               Premium photography & cinematography studio by Ulhas Onkar Zambare.
