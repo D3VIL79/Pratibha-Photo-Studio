@@ -87,7 +87,7 @@ export function HeroSection() {
         </motion.div>
 
         <AnimatedHeading
-          text="PRATBHA"
+          text="PRATIBHA"
           className="text-[clamp(4rem,12vw,14rem)] font-bold tracking-[-0.04em] text-white leading-[0.85]"
           delay={0.5}
         />

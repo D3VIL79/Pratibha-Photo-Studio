@@ -36,7 +36,7 @@ const testimonials = [
   {
     name: "Amit Kulkarni",
     event: "Corporate Event",
-    text: "Pratbha Studio delivered exceptional coverage of our corporate event. Highly recommended!",
+    text: "Pratibha Photo Studio delivered exceptional coverage of our corporate event. Highly recommended!",
   },
 ];
 

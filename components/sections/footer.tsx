@@ -24,11 +24,11 @@ export function Footer() {
             transition={{ duration: 1 }}
           >
             <span className="text-3xl font-heading font-bold text-white tracking-tighter block mb-4">
-              PRATBHA<span className="text-[#00FF9C]">.</span>
+              PRATIBHA PHOTO<span className="text-[#00FF9C]">.</span>
             </span>
             <p className="text-white/25 text-sm leading-relaxed max-w-xs">
-              Premium photography & cinematography studio by Ulhas Onkar Zambare. 
-              Crafting cinematic visual experiences since 2013.
+              Premium photography & cinematography studio by Ulhas Onkar Zambare.
+              Crafting cinematic visual experiences in Nashik, Maharashtra.
             </p>
           </motion.div>
 
@@ -107,7 +107,7 @@ export function Footer() {
         {/* Bottom row */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <span className="text-white/10 text-xs tracking-wider">
-            © {new Date().getFullYear()} Pratbha Photo Studio. All rights reserved.
+            © {new Date().getFullYear()} Pratibha Photo Studio. All rights reserved.
           </span>
           <span className="text-white/10 text-xs tracking-wider">
             Designed with ♥ in Nashik

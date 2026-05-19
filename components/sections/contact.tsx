@@ -226,7 +226,7 @@ export function ContactSection() {
               allowFullScreen
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
-              title="Pratbha Studio Location"
+              title="Pratibha Photo Studio Location"
             />
             {/* Map overlay gradient */}
             <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black via-transparent to-transparent opacity-50" />

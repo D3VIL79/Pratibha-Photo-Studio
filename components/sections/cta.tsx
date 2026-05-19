@@ -86,14 +86,14 @@ export function CTASection() {
 
       <p className="mt-10 text-white/30 text-sm md:text-base text-center max-w-lg font-light tracking-wide leading-relaxed">
         Have a vision? Whether it&apos;s a dream wedding, a fashion editorial, or a brand campaign — 
-        Ulhas Onkar Zambare and the Pratbha team will bring it to life.
+        Ulhas Onkar Zambare and the Pratibha Photo Studio team will bring it to life.
       </p>
 
       {/* CTA buttons */}
       <div className="mt-12 flex flex-col sm:flex-row items-center gap-4">
         {/* WhatsApp CTA */}
         <a
-          href="https://wa.me/919604546198?text=Hi%20Pratbha%20Studio!%20I%20would%20like%20to%20inquire%20about%20your%20photography%20services."
+          href="https://wa.me/919604546198?text=Hi%20Pratibha%20Photo%20Studio!%20I%20would%20like%20to%20inquire%20about%20your%20photography%20services."
           target="_blank"
           rel="noopener noreferrer"
           className="group relative px-10 py-5 overflow-hidden rounded-full bg-[#25D366] border border-[#25D366]/50 transition-all duration-500 hover:shadow-[0_0_40px_rgba(37,211,102,0.3)]"

@@ -16,9 +16,9 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "Pratbha Photo Studio | Cinematic Visual Experiences",
+  title: "Pratibha Photo Studio | Cinematic Visual Experiences",
   description:
-    "Award-winning photography and film studio. We blend story, art & technology to craft cinematic visual experiences.",
+    "Award-winning photography and film studio in Nashik. We blend story, art & technology to craft cinematic visual experiences.",
 };
 
 export default function RootLayout({
