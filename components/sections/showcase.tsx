@@ -206,6 +206,8 @@ function Globe({
   selectedIndex: number | null;
   onInteractChange: (interacting: boolean) => void;
 }) {
+  const { size } = useThree();
+  const isMobile = size.width < 768;
   const controlsRef = useRef<any>(null);
   const interactTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -321,15 +323,15 @@ function Globe({
       <OrbitControls
         ref={controlsRef}
         autoRotate
-        autoRotateSpeed={0.5}
+        autoRotateSpeed={isMobile ? 0.2 : 0.5}
         onStart={handleInteractStart}
         onEnd={handleInteractEnd}
         enableZoom={true}
         minDistance={6}
         maxDistance={14}
         enablePan={false}
-        rotateSpeed={0.5}
-        dampingFactor={0.05}
+        rotateSpeed={1}
+        dampingFactor={0.1}
         enableDamping
       />
 
@@ -442,7 +444,7 @@ export function ShowcaseSection() {
           camera={{ position: [0, 1, 9.5], fov: 45 }}
           onPointerMissed={() => setSelectedIndex(null)}
           style={{ cursor: "grab" }}
-          dpr={[1, 1.2]}
+          dpr={[1, Math.min(window.devicePixelRatio, 2)]}
           gl={{
             antialias: false,
             powerPreference: "high-performance",
