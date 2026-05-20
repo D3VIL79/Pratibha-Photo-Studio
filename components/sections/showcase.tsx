@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, Suspense, useMemo, useEffect, memo, useCallback } from "react";
-import { Canvas, useFrame, useLoader } from "@react-three/fiber";
+import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 import Image from "next/image";
@@ -216,8 +216,8 @@ function Globe({
     const controls = controlsRef.current;
     if (!controls) return;
 
-    // Allow native vertical scrolling on mobile
-    controls.domElement.style.touchAction = 'pan-y';
+    // Allow full 3D rotation on mobile (OrbitControls native behavior)
+    controls.domElement.style.touchAction = 'none';
 
     // Intercept mouse wheel events to prevent globe zoom and allow page scroll
     const stopWheel = (e: WheelEvent) => {
@@ -331,6 +331,17 @@ function Globe({
 /* ─── Category labels from item data ─── */
 const CATEGORIES = ["Bridal", "Ceremony", "Architecture", "Scenery", "Portrait", "Creative", "Wilderness", "Travel"];
 
+function CameraAdjuster() {
+  const { camera, size } = useThree();
+  useEffect(() => {
+    // Zoom out on mobile to fit the globe perfectly
+    const isMobile = size.width < 768;
+    camera.position.z = isMobile ? 14 : 9.5;
+    camera.updateProjectionMatrix();
+  }, [size, camera]);
+  return null;
+}
+
 /* ─── Loading state ─── */
 function Loader() {
   return (
@@ -430,7 +441,7 @@ export function ShowcaseSection() {
             handleInteractStart();
             handleInteractEnd();
           }}
-          style={{ cursor: "grab", touchAction: "pan-y" }}
+          style={{ cursor: "grab" }}
           dpr={[1, 1.5]}
           gl={{
             antialias: false,
@@ -440,6 +451,7 @@ export function ShowcaseSection() {
           }}
           performance={{ min: 0.5 }}
         >
+          <CameraAdjuster />
           <Globe 
             onSelect={(idx) => {
               setSelectedIndex(idx);
@@ -464,8 +476,8 @@ export function ShowcaseSection() {
 
       {/* ─── DETAIL PANEL ─── */}
       <div
-        className={`absolute right-0 top-0 bottom-0 w-full md:w-[420px] bg-black/[0.93] backdrop-blur-2xl border-l border-white/[0.05] z-40 flex flex-col justify-center px-8 md:px-12 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-          selectedItem ? "translate-x-0" : "translate-x-full"
+        className={`absolute right-0 bottom-0 w-full h-[60vh] md:h-full md:w-[420px] md:top-0 bg-black/[0.93] backdrop-blur-2xl border-t md:border-t-0 md:border-l border-white/[0.05] z-40 flex flex-col justify-center px-6 md:px-12 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          selectedItem ? 'translate-y-0 md:translate-x-0' : 'translate-y-full md:translate-y-0 md:translate-x-full'
         }`}
       >
         {selectedItem && (
