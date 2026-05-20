@@ -200,17 +200,28 @@ const ImageCard = memo(function ImageCard({
 function Globe({
   onSelect,
   selectedIndex,
-  isInteracting,
-  onInteractStart,
-  onInteractEnd,
+  onInteractChange,
 }: {
   onSelect: (i: number | null) => void;
   selectedIndex: number | null;
-  isInteracting: boolean;
-  onInteractStart: () => void;
-  onInteractEnd: () => void;
+  onInteractChange: (interacting: boolean) => void;
 }) {
   const controlsRef = useRef<any>(null);
+  const interactTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleInteractStart = useCallback(() => {
+    onInteractChange(true);
+    if (interactTimeoutRef.current) clearTimeout(interactTimeoutRef.current);
+    if (controlsRef.current) controlsRef.current.autoRotateSpeed = 0;
+  }, [onInteractChange]);
+
+  const handleInteractEnd = useCallback(() => {
+    if (interactTimeoutRef.current) clearTimeout(interactTimeoutRef.current);
+    interactTimeoutRef.current = setTimeout(() => {
+      onInteractChange(false);
+      if (controlsRef.current) controlsRef.current.autoRotateSpeed = 0.5;
+    }, 3000);
+  }, [onInteractChange]);
 
   useEffect(() => {
     const controls = controlsRef.current;
@@ -310,9 +321,9 @@ function Globe({
       <OrbitControls
         ref={controlsRef}
         autoRotate
-        autoRotateSpeed={isInteracting ? 0 : 0.5}
-        onStart={onInteractStart}
-        onEnd={onInteractEnd}
+        autoRotateSpeed={0.5}
+        onStart={handleInteractStart}
+        onEnd={handleInteractEnd}
         enableZoom={true}
         minDistance={6}
         maxDistance={14}
@@ -357,25 +368,15 @@ function Loader() {
 /* ─── Main exported section ─── */
 export function ShowcaseSection() {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-  const [isInteracting, setIsInteracting] = useState(false);
-  const interactTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isInteractingRef = useRef(false);
 
-  const handleInteractStart = useCallback(() => {
-    setIsInteracting(true);
-    if (interactTimeoutRef.current) clearTimeout(interactTimeoutRef.current);
-  }, []);
-
-  const handleInteractEnd = useCallback(() => {
-    if (interactTimeoutRef.current) clearTimeout(interactTimeoutRef.current);
-    interactTimeoutRef.current = setTimeout(() => {
-      setIsInteracting(false);
-    }, 3000);
+  const handleInteractChange = useCallback((interacting: boolean) => {
+    isInteractingRef.current = interacting;
   }, []);
 
   useEffect(() => {
-    if (isInteracting) return;
-    
     const interval = setInterval(() => {
+      if (isInteractingRef.current) return;
       // Disable auto-random-selection on mobile devices
       if (window.innerWidth < 768) return;
 
@@ -384,7 +385,7 @@ export function ShowcaseSection() {
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [isInteracting]);
+  }, []);
 
   const selectedItem =
     selectedIndex !== null ? showcaseItems[selectedIndex] : null;
@@ -439,13 +440,9 @@ export function ShowcaseSection() {
       <Suspense fallback={<Loader />}>
         <Canvas
           camera={{ position: [0, 1, 9.5], fov: 45 }}
-          onPointerMissed={() => {
-            setSelectedIndex(null);
-            handleInteractStart();
-            handleInteractEnd();
-          }}
+          onPointerMissed={() => setSelectedIndex(null)}
           style={{ cursor: "grab" }}
-          dpr={[1, 1.5]}
+          dpr={[1, 1.2]}
           gl={{
             antialias: false,
             powerPreference: "high-performance",
@@ -456,15 +453,9 @@ export function ShowcaseSection() {
         >
           <CameraAdjuster />
           <Globe 
-            onSelect={(idx) => {
-              setSelectedIndex(idx);
-              handleInteractStart();
-              handleInteractEnd();
-            }} 
+            onSelect={(idx) => setSelectedIndex(idx)} 
             selectedIndex={selectedIndex} 
-            isInteracting={isInteracting}
-            onInteractStart={handleInteractStart}
-            onInteractEnd={handleInteractEnd}
+            onInteractChange={handleInteractChange}
           />
         </Canvas>
       </Suspense>
