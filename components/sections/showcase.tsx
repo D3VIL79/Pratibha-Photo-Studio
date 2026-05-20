@@ -376,6 +376,9 @@ export function ShowcaseSection() {
     if (isInteracting) return;
     
     const interval = setInterval(() => {
+      // Disable auto-random-selection on mobile devices
+      if (window.innerWidth < 768) return;
+
       const randomIdx = Math.floor(Math.random() * showcaseItems.length);
       setSelectedIndex(randomIdx);
     }, 5000);
