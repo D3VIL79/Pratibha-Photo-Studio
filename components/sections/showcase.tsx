@@ -210,6 +210,27 @@ function Globe({
   onInteractStart: () => void;
   onInteractEnd: () => void;
 }) {
+  const controlsRef = useRef<any>(null);
+
+  useEffect(() => {
+    const controls = controlsRef.current;
+    if (!controls) return;
+
+    // Allow native vertical scrolling on mobile
+    controls.domElement.style.touchAction = 'pan-y';
+
+    // Intercept mouse wheel events to prevent globe zoom and allow page scroll
+    const stopWheel = (e: WheelEvent) => {
+      e.stopPropagation();
+    };
+
+    controls.domElement.addEventListener('wheel', stopWheel, { capture: true });
+
+    return () => {
+      controls.domElement.removeEventListener('wheel', stopWheel, { capture: true });
+    };
+  }, []);
+
   const handleSelect = useCallback(
     (idx: number) => onSelect(idx),
     [onSelect]
@@ -287,11 +308,12 @@ function Globe({
 
       {/* ─── Controls ─── */}
       <OrbitControls
+        ref={controlsRef}
         autoRotate
         autoRotateSpeed={isInteracting ? 0 : 0.5}
         onStart={onInteractStart}
         onEnd={onInteractEnd}
-        enableZoom
+        enableZoom={true}
         minDistance={6}
         maxDistance={14}
         enablePan={false}
@@ -408,7 +430,7 @@ export function ShowcaseSection() {
             handleInteractStart();
             handleInteractEnd();
           }}
-          style={{ cursor: "grab" }}
+          style={{ cursor: "grab", touchAction: "pan-y" }}
           dpr={[1, 1.5]}
           gl={{
             antialias: false,
