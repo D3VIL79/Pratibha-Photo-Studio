@@ -347,10 +347,11 @@ const CATEGORIES = ["Bridal", "Ceremony", "Architecture", "Scenery", "Portrait",
 function CameraAdjuster() {
   const { camera, size } = useThree();
   useEffect(() => {
-    // Zoom out on mobile to fit the globe perfectly
-    const isMobile = size.width < 768;
-    camera.position.z = isMobile ? 14 : 9.5;
-    camera.updateProjectionMatrix();
+    // Only adjust for desktop; mobile already set via Canvas props
+    if (size.width >= 768) {
+      camera.position.z = 9.5;
+      camera.updateProjectionMatrix();
+    }
   }, [size, camera]);
   return null;
 }
@@ -369,6 +370,7 @@ function Loader() {
 
 /* ─── Main exported section ─── */
 export function ShowcaseSection() {
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const isInteractingRef = useRef(false);
 
@@ -441,7 +443,7 @@ export function ShowcaseSection() {
       {/* 3D Canvas */}
       <Suspense fallback={<Loader />}>
         <Canvas
-          camera={{ position: [0, 1, 9.5], fov: 45 }}
+          camera={{ position: [0, 1, isMobile ? 14 : 9.5], fov: 45 }}
           onPointerMissed={() => setSelectedIndex(null)}
           style={{ cursor: "grab" }}
           dpr={[1, Math.min(window.devicePixelRatio, 2)]}
