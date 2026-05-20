@@ -211,25 +211,30 @@ function Globe({
   const controlsRef = useRef<any>(null);
   const interactTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const handleInteractStart = useCallback(() => {
-    onInteractChange(true);
-    if (interactTimeoutRef.current) clearTimeout(interactTimeoutRef.current);
-    if (controlsRef.current) controlsRef.current.autoRotateSpeed = 0;
-  }, [onInteractChange]);
+const handleInteractStart = useCallback(() => {
+  onInteractChange(true);
+  if (interactTimeoutRef.current) clearTimeout(interactTimeoutRef.current);
+  // No autoRotate manipulation needed after disabling autoRotate
+}, [onInteractChange]);
 
-  const handleInteractEnd = useCallback(() => {
-    if (interactTimeoutRef.current) clearTimeout(interactTimeoutRef.current);
-    interactTimeoutRef.current = setTimeout(() => {
-      onInteractChange(false);
-      if (controlsRef.current) controlsRef.current.autoRotateSpeed = 0.5;
-    }, 3000);
-  }, [onInteractChange]);
+const handleInteractEnd = useCallback(() => {
+  if (interactTimeoutRef.current) clearTimeout(interactTimeoutRef.current);
+  interactTimeoutRef.current = setTimeout(() => {
+    onInteractChange(false);
+    // No autoRotate manipulation needed
+  }, 3000);
+}, [onInteractChange]);
+
+  const handleSelect = useCallback(
+    (idx: number) => onSelect(idx),
+    [onSelect]
+  );
 
   useEffect(() => {
     const controls = controlsRef.current;
     if (!controls) return;
 
-    // Allow full 3D rotation on mobile (OrbitControls native behavior)
+    // Always disable touchAction to prevent mobile browser jitter and allow pure 3D rotation
     controls.domElement.style.touchAction = 'none';
 
     // Intercept mouse wheel events to prevent globe zoom and allow page scroll
@@ -242,12 +247,8 @@ function Globe({
     return () => {
       controls.domElement.removeEventListener('wheel', stopWheel, { capture: true });
     };
-  }, []);
+  }, [isMobile]);
 
-  const handleSelect = useCallback(
-    (idx: number) => onSelect(idx),
-    [onSelect]
-  );
 
   return (
     <>
@@ -319,24 +320,21 @@ function Globe({
         </Suspense>
       </group>
 
-      {/* ─── Controls ─── */}
       <OrbitControls
-        ref={controlsRef}
-        autoRotate
-        autoRotateSpeed={isMobile ? 0.2 : 0.5}
-        onStart={handleInteractStart}
-        onEnd={handleInteractEnd}
-        enableZoom={true}
-        minDistance={6}
-        maxDistance={14}
-        enablePan={false}
-        rotateSpeed={1}
-        dampingFactor={0.1}
-        enableDamping
-      />
-
-      {/* ─── Lighting (simplified — using BasicMaterial so lights don't matter much) ─── */}
-      <ambientLight intensity={1} />
+  ref={controlsRef}
+  enablePan={false}
+  enableZoom={true}
+  minDistance={6}
+  maxDistance={14}
+  enableRotate={true}
+  minPolarAngle={0.01}
+  maxPolarAngle={Math.PI - 0.01}
+  rotateSpeed={0.5}
+  enableDamping={true}
+  dampingFactor={0.15}
+  onStart={handleInteractStart}
+  onEnd={handleInteractEnd}
+/>
     </>
   );
 }
@@ -370,26 +368,35 @@ function Loader() {
 
 /* ─── Main exported section ─── */
 export function ShowcaseSection() {
-  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+  const [isMobile, setIsMobile] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const isInteractingRef = useRef(false);
+
+  // Reliable mobile detection post-hydration
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile(); // Check immediately on mount
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   const handleInteractChange = useCallback((interacting: boolean) => {
     isInteractingRef.current = interacting;
   }, []);
 
   useEffect(() => {
+    // Do not run auto‑selection on mobile at all
+    if (isMobile) {
+      setSelectedIndex(null); // Ensure preview stays closed on mobile load
+      return;
+    }
     const interval = setInterval(() => {
       if (isInteractingRef.current) return;
-      // Disable auto-random-selection on mobile devices
-      if (window.innerWidth < 768) return;
-
       const randomIdx = Math.floor(Math.random() * showcaseItems.length);
       setSelectedIndex(randomIdx);
     }, 5000);
-
     return () => clearInterval(interval);
-  }, []);
+  }, [isMobile]);
 
   const selectedItem =
     selectedIndex !== null ? showcaseItems[selectedIndex] : null;
@@ -397,7 +404,7 @@ export function ShowcaseSection() {
   return (
     <section
       id="work"
-      className="relative h-screen bg-black overflow-hidden z-20"
+      className="relative min-h-screen bg-black overflow-y-auto z-20"
     >
       {/* Ambient background */}
       <div className="absolute inset-0 pointer-events-none">
@@ -444,7 +451,7 @@ export function ShowcaseSection() {
       <Suspense fallback={<Loader />}>
         <Canvas
           camera={{ position: [0, 1, isMobile ? 14 : 9.5], fov: 45 }}
-          onPointerMissed={() => setSelectedIndex(null)}
+          {...(!isMobile && { onPointerMissed: () => setSelectedIndex(null) })}
           style={{ cursor: "grab" }}
           dpr={[1, Math.min(window.devicePixelRatio, 2)]}
           gl={{
@@ -473,76 +480,76 @@ export function ShowcaseSection() {
       </div>
 
       {/* ─── DETAIL PANEL ─── */}
-      <div
-        className={`absolute right-0 bottom-0 w-full h-[60vh] md:h-full md:w-[420px] md:top-0 bg-black/[0.93] backdrop-blur-2xl border-t md:border-t-0 md:border-l border-white/[0.05] z-40 flex flex-col justify-center px-6 md:px-12 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-          selectedItem ? 'translate-y-0 md:translate-x-0' : 'translate-y-full md:translate-y-0 md:translate-x-full'
-        }`}
-      >
-        {selectedItem && (
-          <>
-            {/* Close */}
-            <button
-              onClick={() => setSelectedIndex(null)}
-              className="absolute top-6 right-6 w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-white/40 hover:text-white hover:border-white/30 transition-all duration-300 text-lg"
-            >
-              ✕
-            </button>
+      {/* Updated to render detail panel only when selectedItem exists */}
+      {selectedItem && (
+        <div
+          className={`absolute right-0 bottom-0 w-full h-[60vh] md:h-full md:w-[420px] md:top-0 bg-black/[0.93] backdrop-blur-2xl border-t md:border-t-0 md:border-l border-white/[0.05] z-40 flex flex-col justify-center px-6 md:px-12 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+            selectedItem ? 'translate-y-0 md:translate-x-0' : 'translate-y-full md:translate-y-0 md:translate-x-full'
+          }`}
+        >
+          {/* Close */}
+          <button
+            onClick={(e) => { e.stopPropagation(); setSelectedIndex(null); }}
+            onTouchStart={(e) => { e.stopPropagation(); setSelectedIndex(null); }}
+            className="absolute top-4 right-4 md:top-6 md:right-6 w-14 h-14 rounded-full border border-white/20 flex items-center justify-center text-white/60 hover:text-white hover:border-white/50 transition-all duration-300 text-xl z-50 bg-black/40 backdrop-blur-md"
+          >
+            ✕
+          </button>
 
-            {/* Number watermark */}
-            <span className="text-white/[0.03] text-[8rem] font-heading font-bold leading-none absolute top-8 left-8 select-none pointer-events-none">
-              {String((selectedIndex ?? 0) + 1).padStart(2, "0")}
-            </span>
+          {/* Number watermark */}
+          <span className="text-white/[0.03] text-[8rem] font-heading font-bold leading-none absolute top-8 left-8 select-none pointer-events-none">
+            {String((selectedIndex ?? 0) + 1).padStart(2, "0")}
+          </span>
 
-            <div className="relative z-10">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-8 h-[1px] bg-[#00FF9C]/50" />
-                <span className="text-[#00FF9C] text-[10px] uppercase tracking-[0.4em] font-light">
-                  {selectedItem.subtitle} — {selectedItem.year}
-                </span>
-              </div>
-
-              <h3 className="text-3xl md:text-5xl font-heading font-bold text-white tracking-[-0.02em] leading-[0.95] mb-4">
-                {selectedItem.title}
-              </h3>
-
-              <div className="w-12 h-[1px] bg-white/10 mb-4" />
-
-              <p className="text-white/35 text-sm leading-relaxed mb-8">
-                {selectedItem.description}
-              </p>
-
-              {/* Large image preview — uses full-res original via Next/Image */}
-              <div className="relative w-full aspect-[4/3] rounded-xl overflow-hidden mb-6">
-                <Image
-                  src={selectedItem.image}
-                  alt={selectedItem.title}
-                  fill
-                  className="object-cover"
-                  sizes="400px"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-              </div>
-
-              <button className="group flex items-center gap-3 text-white/40 hover:text-white transition-colors duration-500 text-sm tracking-wider uppercase">
-                <span className="font-light">View Full Project</span>
-                <svg
-                  className="w-4 h-4 transition-transform duration-500 group-hover:translate-x-2"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={1.5}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3"
-                  />
-                </svg>
-              </button>
+          <div className="relative z-10">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-8 h-[1px] bg-[#00FF9C]/50" />
+              <span className="text-[#00FF9C] text-[10px] uppercase tracking-[0.4em] font-light">
+                {selectedItem.subtitle} — {selectedItem.year}
+              </span>
             </div>
-          </>
-        )}
-      </div>
+
+            <h3 className="text-3xl md:text-5xl font-heading font-bold text-white tracking-[-0.02em] leading-[0.95] mb-4">
+              {selectedItem.title}
+            </h3>
+
+            <div className="w-12 h-[1px] bg-white/10 mb-4" />
+
+            <p className="text-white/35 text-sm leading-relaxed mb-8">
+              {selectedItem.description}
+            </p>
+
+            {/* Large image preview — uses full-res original via Next/Image */}
+            <div className="relative w-full aspect-[4/3] rounded-xl overflow-hidden mb-6">
+              <Image
+                src={selectedItem.image}
+                alt={selectedItem.title}
+                fill
+                className="object-cover"
+                sizes="400px"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+            </div>
+
+            <button className="group flex items-center gap-3 text-white/40 hover:text-white transition-colors duration-500 text-sm tracking-wider uppercase">
+              <span className="font-light">View Full Project</span>
+              <svg
+                className="w-4 h-4 transition-transform duration-500 group-hover:translate-x-2"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={1.5}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
